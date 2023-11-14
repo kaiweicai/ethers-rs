@@ -10,15 +10,18 @@ use std::str::FromStr;
 /// requires, a valid endpoint in `RPC_URL` env var that supports `debug_traceTransaction`
 #[tokio::main]
 async fn main() -> Result<()> {
-    if let Ok(url) = std::env::var("RPC_URL") {
+    // if let Ok(url) = std::env::var("RPC_URL") {
+        let url = "https://sepolia-rollup.arbitrum.io/rpc";
         let client = Provider::<Http>::try_from(url)?;
-        let tx_hash = "0x97a02abf405d36939e5b232a5d4ef5206980c5a6661845436058f30600c52df7";
+        let tx_hash = "0x7d4cb959fff0c0b0e305650f204ea197c342ae9728d90bcc5936943e181e6e8a";
         let h: H256 = H256::from_str(tx_hash)?;
 
         // default tracer
         let options = GethDebugTracingOptions::default();
-        let traces = client.debug_trace_transaction(h, options).await?;
+        let traces = client.get_transaction(h).await?;
+        let get_transaction_receipt = client.get_transaction_receipt(h).await?;
         println!("{traces:?}");
+        println!("{get_transaction_receipt:?}");
 
         // call tracer
         let options = GethDebugTracingOptions {
@@ -41,7 +44,7 @@ async fn main() -> Result<()> {
             };
         let traces = client.debug_trace_transaction(h, options).await?;
         println!("{traces:?}");
-    }
+    // }
 
     Ok(())
 }

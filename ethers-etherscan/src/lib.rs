@@ -28,6 +28,7 @@ pub mod contract;
 pub mod errors;
 pub mod gas;
 pub mod source_tree;
+pub mod stats;
 mod transaction;
 pub mod utils;
 pub mod verify;
@@ -92,7 +93,6 @@ impl Client {
                 .map_err(Into::into),
 
             // Backwards compatibility, ideally these should return an error.
-            Chain::XDai |
             Chain::Chiado |
             Chain::Sepolia |
             Chain::Rsk |

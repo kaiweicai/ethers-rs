@@ -71,6 +71,7 @@ pub enum Chain {
     Arbitrum = 42161,
     ArbitrumTestnet = 421611,
     ArbitrumGoerli = 421613,
+    ArbitrumSepolia = 421614,
     ArbitrumNova = 42170,
 
     Cronos = 25,
@@ -88,13 +89,14 @@ pub enum Chain {
     Poa = 99,
     Sokol = 77,
 
+    Scroll = 534352,
     ScrollAlphaTestnet = 534353,
 
     Metis = 1088,
 
     #[strum(to_string = "xdai", serialize = "gnosis", serialize = "gnosis-chain")]
     #[serde(alias = "xdai", alias = "gnosis", alias = "gnosis_chain")]
-    XDai = 100,
+    Gnosis = 100,
 
     Polygon = 137,
     #[strum(to_string = "mumbai", serialize = "polygon-mumbai")]
@@ -288,7 +290,7 @@ impl Chain {
 
         let ms = match self {
             Mainnet => 12_000,
-            Arbitrum | ArbitrumTestnet | ArbitrumGoerli | ArbitrumNova => 1_300,
+            Arbitrum | ArbitrumTestnet | ArbitrumGoerli | ArbitrumSepolia | ArbitrumNova => 1_300,
             Optimism | OptimismGoerli => 2_000,
             Polygon | PolygonMumbai => 2_100,
             Moonbeam | Moonriver => 12_500,
@@ -303,14 +305,13 @@ impl Chain {
             Dev | AnvilHardhat => 200,
             Celo | CeloAlfajores | CeloBaklava => 5_000,
             FilecoinCalibrationTestnet | FilecoinMainnet => 30_000,
-            ScrollAlphaTestnet => 3_000,
+            Scroll | ScrollAlphaTestnet => 3_000,
+            Gnosis | Chiado => 5_000,
             // Explicitly exhaustive. See NB above.
-            Morden | Ropsten | Rinkeby | Goerli | Kovan | XDai | Chiado | Sepolia | Holesky |
-            Moonbase | MoonbeamDev | OptimismKovan | Poa | Sokol | Rsk | EmeraldTestnet |
-            Boba | Base | BaseGoerli | ZkSync | ZkSyncTestnet | PolygonZkEvm |
-            PolygonZkEvmTestnet | Metis | Linea | LineaTestnet | Mantle | MantleTestnet => {
-                return None
-            }
+            Morden | Ropsten | Rinkeby | Goerli | Kovan | Sepolia | Holesky | Moonbase |
+            MoonbeamDev | OptimismKovan | Poa | Sokol | Rsk | EmeraldTestnet | Boba | Base |
+            BaseGoerli | ZkSync | ZkSyncTestnet | PolygonZkEvm | PolygonZkEvmTestnet | Metis |
+            Linea | LineaTestnet | Mantle | MantleTestnet => return None,
         };
 
         Some(Duration::from_millis(ms))
@@ -350,7 +351,8 @@ impl Chain {
             Mantle |
             MantleTestnet |
             PolygonZkEvm |
-            PolygonZkEvmTestnet => true,
+            PolygonZkEvmTestnet |
+            Scroll => true,
 
             // Known EIP-1559 chains
             Mainnet |
@@ -367,17 +369,20 @@ impl Chain {
             AvalancheFuji |
             Arbitrum |
             ArbitrumGoerli |
+            ArbitrumSepolia |
             ArbitrumNova |
             FilecoinMainnet |
             Linea |
             LineaTestnet |
-            FilecoinCalibrationTestnet => false,
+            FilecoinCalibrationTestnet |
+            Gnosis |
+            Chiado => false,
 
             // Unknown / not applicable, default to false for backwards compatibility
             Dev | AnvilHardhat | Morden | Ropsten | Rinkeby | Cronos | CronosTestnet | Kovan |
-            Sokol | Poa | XDai | Moonbeam | MoonbeamDev | Moonriver | Moonbase | Evmos |
-            EvmosTestnet | Chiado | Aurora | AuroraTestnet | Canto | CantoTestnet |
-            ScrollAlphaTestnet | Metis => false,
+            Sokol | Poa | Moonbeam | MoonbeamDev | Moonriver | Moonbase | Evmos |
+            EvmosTestnet | Aurora | AuroraTestnet | Canto | CantoTestnet | ScrollAlphaTestnet |
+            Metis => false,
         }
     }
 
@@ -387,7 +392,7 @@ impl Chain {
     /// `<https://eips.ethereum.org/EIPS/eip-3855>`
     pub const fn supports_push0(&self) -> bool {
         match self {
-            Chain::Mainnet | Chain::Goerli | Chain::Sepolia => true,
+            Chain::Mainnet | Chain::Goerli | Chain::Sepolia | Chain::Gnosis | Chain::Chiado => true,
             _ => false,
         }
     }
@@ -466,6 +471,9 @@ impl Chain {
                 ("https://api-testnet.arbiscan.io/api", "https://testnet.arbiscan.io")
             }
             ArbitrumGoerli => ("https://api-goerli.arbiscan.io/api", "https://goerli.arbiscan.io"),
+            ArbitrumSepolia => {
+                ("https://api-sepolia.arbiscan.io/api", "https://sepolia.arbiscan.io")
+            }
             ArbitrumNova => ("https://api-nova.arbiscan.io/api", "https://nova.arbiscan.io/"),
 
             Cronos => ("https://api.cronoscan.com/api", "https://cronoscan.com"),
@@ -477,11 +485,9 @@ impl Chain {
             Moonbase => ("https://api-moonbase.moonscan.io/api", "https://moonbase.moonscan.io/"),
             Moonriver => ("https://api-moonriver.moonscan.io/api", "https://moonriver.moonscan.io"),
 
-            // blockscout API is etherscan compatible
-            XDai => {
-                ("https://blockscout.com/xdai/mainnet/api", "https://blockscout.com/xdai/mainnet")
-            }
+            Gnosis => ("https://api.gnosisscan.io/api", "https://gnosisscan.io"),
 
+            Scroll => ("https://api.scrollscan.com", "https://scrollscan.com"),
             ScrollAlphaTestnet => {
                 ("https://blockscout.scroll.io/api", "https://blockscout.scroll.io/")
             }
@@ -598,6 +604,7 @@ impl Chain {
             Arbitrum |
             ArbitrumTestnet |
             ArbitrumGoerli |
+            ArbitrumSepolia |
             ArbitrumNova |
             Cronos |
             CronosTestnet |
@@ -610,7 +617,9 @@ impl Chain {
             Linea |
             Mantle |
             MantleTestnet |
-            BaseGoerli => "ETHERSCAN_API_KEY",
+            BaseGoerli |
+            Gnosis |
+            Scroll => "ETHERSCAN_API_KEY",
 
             Avalanche | AvalancheFuji => "SNOWTRACE_API_KEY",
 
@@ -625,7 +634,6 @@ impl Chain {
             Boba => "BOBASCAN_API_KEY",
 
             // Explicitly exhaustive. See NB above.
-            XDai |
             ScrollAlphaTestnet |
             Metis |
             Chiado |
@@ -712,7 +720,7 @@ mod tests {
             (Mainnet, &["ethlive"]),
             (BinanceSmartChain, &["bsc", "binance-smart-chain"]),
             (BinanceSmartChainTestnet, &["bsc-testnet", "binance-smart-chain-testnet"]),
-            (XDai, &["xdai", "gnosis", "gnosis-chain"]),
+            (Gnosis, &["gnosis", "gnosis-chain"]),
             (PolygonMumbai, &["mumbai"]),
             (PolygonZkEvm, &["zkevm", "polygon-zkevm"]),
             (PolygonZkEvmTestnet, &["zkevm-testnet", "polygon-zkevm-testnet"]),
